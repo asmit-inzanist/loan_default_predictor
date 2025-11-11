@@ -3,9 +3,35 @@ import pandas as pd
 import numpy as np
 import joblib
 
-# Load model and scaler
-model = joblib.load("loan_default_model.pkl")
-scaler = joblib.load("loan_scaler.pkl")
+# Load model and scaler with graceful error handling (shows useful debug info in the app)
+try:
+    model = joblib.load("loan_default_model.pkl")
+    scaler = joblib.load("loan_scaler.pkl")
+except Exception as e:
+    # If running in a normal Python session this will raise; in Streamlit show a helpful message
+    try:
+        # Use Streamlit UI to display debugging hints
+        st.set_page_config(page_title="Loan Default Predictor - Error", page_icon="💥")
+        st.title("Model load error")
+        st.error("Failed to load model or scaler. See details below and check your environment.")
+        st.write(f"Error: {e}")
+        import sys, platform
+        st.write(f"Python executable: {sys.executable}")
+        st.write(f"Python version: {sys.version}")
+        try:
+            import sklearn
+            st.write(f"scikit-learn: {sklearn.__version__}")
+        except Exception:
+            st.write("scikit-learn: not installed or failed to import")
+        try:
+            import joblib as _joblib
+            st.write(f"joblib: {_joblib.__version__}")
+        except Exception:
+            st.write("joblib: not available")
+        st.stop()
+    except Exception:
+        # If Streamlit isn't available (e.g., running from plain python), re-raise original exception
+        raise
 
 st.set_page_config(page_title="Loan Default Predictor", page_icon="💰", layout="centered")
 
@@ -27,20 +53,20 @@ loan_term = st.sidebar.number_input("Loan Term (months)", min_value=6, max_value
 dti_ratio = st.sidebar.number_input("DTI Ratio", min_value=0.0, max_value=100.0, value=20.0)
 
 # Categorical Inputs
-education = st.sidebar.selectbox("Education", ["High School", "Bachelor", "Master", "PhD"])
-employment_type = st.sidebar.selectbox("Employment Type", ["Salaried", "Self-Employed", "Unemployed"])
+education = st.sidebar.selectbox("Education", ["High School", "Bachelor's", "Master's", "PhD"])
+employment_type = st.sidebar.selectbox("Employment Type", ["Full-time", "Part-time", "Self-employed", "Unemployed"])
 marital_status = st.sidebar.selectbox("Marital Status", ["Single", "Married", "Divorced"])
 has_mortgage = st.sidebar.selectbox("Has Mortgage", ["Yes", "No"])
 has_dependents = st.sidebar.selectbox("Has Dependents", ["Yes", "No"])
-loan_purpose = st.sidebar.selectbox("Loan Purpose", ["Home", "Car", "Education", "Business", "Personal"])
+loan_purpose = st.sidebar.selectbox("Loan Purpose", ["Auto", "Business", "Education", "Home", "Other"])
 has_cosigner = st.sidebar.selectbox("Has Co-Signer", ["Yes", "No"])
 
-# Convert categorical to numeric (must match training encoding)
-education_map = {"High School": 0, "Bachelor": 1, "Master": 2, "PhD": 3}
-employment_map = {"Salaried": 0, "Self-Employed": 1, "Unemployed": 2}
-marital_map = {"Single": 0, "Married": 1, "Divorced": 2}
+# Convert categorical to numeric (must match training encoding - alphabetical order)
+education_map = {"Bachelor's": 0, "High School": 1, "Master's": 2, "PhD": 3}
+employment_map = {"Full-time": 0, "Part-time": 1, "Self-employed": 2, "Unemployed": 3}
+marital_map = {"Divorced": 0, "Married": 1, "Single": 2}
 binary_map = {"Yes": 1, "No": 0}
-loan_purpose_map = {"Home": 0, "Car": 1, "Education": 2, "Business": 3, "Personal": 4}
+loan_purpose_map = {"Auto": 0, "Business": 1, "Education": 2, "Home": 3, "Other": 4}
 
 # Create DataFrame for prediction
 input_data = pd.DataFrame({
