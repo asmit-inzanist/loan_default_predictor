@@ -33,6 +33,10 @@ wheels/
 # Model files (optional - comment out if you want to include them)
 # *.pkl
 
+# Data files
+Loan_default.csv
+*.csv
+
 # Environment variables
 .env
 
