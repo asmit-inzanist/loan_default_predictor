@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import joblib
+import plotly.graph_objects as go
 
 # Load model and scaler with graceful error handling (shows useful debug info in the app)
 try:
@@ -37,6 +38,14 @@ st.set_page_config(page_title="Loan Default Predictor", page_icon="💰", layout
 
 st.title("💰 Loan Default Prediction App")
 st.write("Enter customer details below to predict whether they are likely to **default on a loan**.")
+
+# Project Overview with better styling
+st.markdown("### 📘 Project Overview")
+st.info("""
+This Loan Default Predictor uses a trained Machine Learning model to estimate whether a customer is likely 
+to default on a loan. Enter the customer's financial and credit details to generate real-time predictions.
+""")
+
 
 # Sidebar inputs
 st.sidebar.header("Input Customer Details")
@@ -96,11 +105,47 @@ scaled_input = scaler.transform(input_data)
 if st.button("🔍 Predict"):
     prediction = model.predict(scaled_input)[0]
     probability = model.predict_proba(scaled_input)[0][1]
-
+    
+    # Display prediction result
     if prediction == 1:
         st.error(f"⚠️ The customer is **likely to default** on the loan. (Risk: {probability*100:.2f}%)")
     else:
         st.success(f"✅ The customer is **not likely to default**. (Confidence: {(1-probability)*100:.2f}%)")
+    
+    # Animated Gauge Visualization
+    st.markdown("### 📊 Risk Assessment")
+    fig = go.Figure(go.Indicator(
+        mode = "gauge+number",
+        value = probability * 100,
+        title = {'text': "Default Probability (%)", 'font': {'size': 24, 'color': 'white'}},
+        number = {'font': {'size': 40, 'color': 'white'}},
+        gauge = {
+            'axis': {'range': [0, 100], 'tickwidth': 1, 'tickcolor': "white"},
+            'bar': {'color': "red" if prediction == 1 else "green"},
+            'bgcolor': "rgba(0,0,0,0)",
+            'borderwidth': 2,
+            'bordercolor': "white",
+            'steps': [
+                {'range': [0, 50], 'color': "rgba(0, 255, 0, 0.3)"},
+                {'range': [50, 75], 'color': "rgba(255, 255, 0, 0.3)"},
+                {'range': [75, 100], 'color': "rgba(255, 0, 0, 0.3)"}
+            ],
+            'threshold': {
+                'line': {'color': "white", 'width': 4},
+                'thickness': 0.75,
+                'value': 50
+            }
+        }
+    ))
+    
+    fig.update_layout(
+        paper_bgcolor='rgba(0,0,0,0)',
+        plot_bgcolor='rgba(0,0,0,0)',
+        font={'color': 'white'},
+        height=400
+    )
+    
+    st.plotly_chart(fig, use_container_width=True)
 
 st.markdown("---")
 st.caption("Built with ❤️ using Streamlit and Scikit-learn")
