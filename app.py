@@ -112,28 +112,48 @@ if st.button("🔍 Predict"):
     else:
         st.success(f"✅ The customer is **not likely to default**. (Confidence: {(1-probability)*100:.2f}%)")
     
-    # Animated Gauge Visualization
+    # Animated Gauge Visualization with Premium Colors
     st.markdown("### 📊 Risk Assessment")
+    
+    # Premium color palette - Gradient from Cyan to Purple to Red
+    default_prob = probability * 100
+    
+    # Dynamic bar color based on risk level
+    if default_prob < 30:
+        bar_color = "#00D9FF"  # Cyan - Very Low Risk
+    elif default_prob < 50:
+        bar_color = "#00FF88"  # Mint Green - Low Risk
+    elif default_prob < 70:
+        bar_color = "#FFB800"  # Gold - Medium Risk
+    else:
+        bar_color = "#FF0080"  # Hot Pink/Magenta - High Risk
+    
     fig = go.Figure(go.Indicator(
         mode = "gauge+number",
-        value = probability * 100,
-        title = {'text': "Default Probability (%)", 'font': {'size': 24, 'color': 'white'}},
-        number = {'font': {'size': 40, 'color': 'white'}},
+        value = default_prob,
+        title = {'text': "Default Probability (%)", 'font': {'size': 26, 'color': '#E0E0E0', 'family': 'Segoe UI'}},
+        number = {'font': {'size': 48, 'color': bar_color, 'family': 'Segoe UI', 'weight': 'bold'}},
         gauge = {
-            'axis': {'range': [0, 100], 'tickwidth': 1, 'tickcolor': "white"},
-            'bar': {'color': "red" if prediction == 1 else "green"},
-            'bgcolor': "rgba(0,0,0,0)",
-            'borderwidth': 2,
-            'bordercolor': "white",
+            'axis': {
+                'range': [0, 100], 
+                'tickwidth': 2, 
+                'tickcolor': "#404040",
+                'tickfont': {'size': 14, 'color': '#B0B0B0'}
+            },
+            'bar': {'color': bar_color, 'thickness': 0.7},
+            'bgcolor': "#1a1a1a",
+            'borderwidth': 3,
+            'bordercolor': "#2d2d2d",
             'steps': [
-                {'range': [0, 50], 'color': "rgba(0, 255, 0, 0.3)"},
-                {'range': [50, 75], 'color': "rgba(255, 255, 0, 0.3)"},
-                {'range': [75, 100], 'color': "rgba(255, 0, 0, 0.3)"}
+                {'range': [0, 30], 'color': "#0A2F35"},   # Deep Teal
+                {'range': [30, 50], 'color': "#1A3A2E"},  # Dark Green
+                {'range': [50, 70], 'color': "#3D2817"},  # Dark Brown/Gold
+                {'range': [70, 100], 'color': "#350A1F"}  # Deep Purple/Magenta
             ],
             'threshold': {
-                'line': {'color': "white", 'width': 4},
-                'thickness': 0.75,
-                'value': 50
+                'line': {'color': "#FFFFFF", 'width': 3},
+                'thickness': 0.8,
+                'value': default_prob
             }
         }
     ))
@@ -141,8 +161,9 @@ if st.button("🔍 Predict"):
     fig.update_layout(
         paper_bgcolor='rgba(0,0,0,0)',
         plot_bgcolor='rgba(0,0,0,0)',
-        font={'color': 'white'},
-        height=400
+        font={'color': '#E0E0E0', 'family': 'Segoe UI'},
+        height=420,
+        margin=dict(l=20, r=20, t=60, b=20)
     )
     
     st.plotly_chart(fig, use_container_width=True)
